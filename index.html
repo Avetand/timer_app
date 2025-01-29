@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Presenter Timer</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="wrapper">
+
+        <div id="menuView">
+            <h2>Add presenters</h2>
+            <div id="addPresenterForm">
+                <input type="text" id="presenterName" placeholder="Name">
+                <input type="number"  min="0" id="presenterDuration" placeholder="Duration (min)">
+                <button id="saveButton" class="button">Save</button>
+            </div>
+            <p id="emptyMessage" style="display: none;">The list is empty.</p>
+            <table id="presentersTable">
+                <thead id="tableHeader">
+                    <tr>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th>Duration</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+            <button id="startButton" class="hidden button" style="width:100%;">Start</button>
+        </div>
+
+        
+        <div id="timerView" style="display: none;">
+            <div id="timer"></div>
+            <h3 id="currentPresenterName"></h3>
+            <button id="actionButton" class="button">Next</button>
+        </div>
+        
+
+    </div> <!-- wrapper -->
+    <script src="script.js"></script>
+</body>
+</html>
