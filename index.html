@@ -8,38 +8,59 @@
 </head>
 <body>
     <div id="wrapper">
-
-        <div id="menuView">
-            <h2>Add presenters</h2>
-            <div id="addPresenterForm">
-                <input type="text" id="presenterName" placeholder="Name">
-                <input type="number"  min="0" id="presenterDuration" placeholder="Duration (min)">
-                <button id="saveButton" class="button">Save</button>
+        
+        <!-- Role Selection Screen -->
+        <div id="roleSelectionView">
+            <h2>Choose your role</h2>
+            <div id="roleButtons">
+                <button id="adminButton" class="button" style="width: 100px;">Admin</button>
+                <button id="presenterButton" class="button">Presenter</button>
             </div>
-            <p id="emptyMessage" style="display: none;">The list is empty.</p>
-            <table id="presentersTable">
-                <thead id="tableHeader">
-                    <tr>
-                        <th>#</th>
-                        <th>Name</th>
-                        <th>Duration</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
-            <button id="startButton" class="hidden button" style="width:100%;">Start</button>
         </div>
 
-        
-        <div id="timerView" style="display: none;">
-            <div id="timer"></div>
-            <h3 id="currentPresenterName"></h3>
-            <button id="actionButton" class="button">Next</button>
+        <!-- Admin Login Screen -->
+        <div id="adminLoginView" style="display: none;">
+            <h2>Admin Login</h2>
+            <input type="email" id="adminEmail" placeholder="Email">
+            <input type="password" id="adminPassword" placeholder="Password">
+            <button id="loginButton" class="button">Login</button>
+            <p id="loginError" style="color: red; display: none;"></p>
         </div>
+
+        <!-- Main View (Hidden Initially) -->
+        <div id="mainView" style="display: none;">
+            <div id="menuView">
+                <h2 id="title">Add presenters</h2>
+                <div id="addPresenterForm">
+                    <input type="text" id="presenterName" placeholder="Name">
+                    <input type="number" min="0" id="presenterDuration" placeholder="Duration (min)">
+                    <button id="saveButton" class="button">Save</button>
+                </div>
+                <p id="emptyMessage" style="display: none;">The list is empty.</p>
+                <table id="presentersTable">
+                    <thead id="tableHeader">
+                        <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Duration</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+                <button id="startButton" class="hidden button" style="width:100%;">Start</button>
+            </div>
+
         
+            <div id="timerView" style="display: none;">
+                <div id="timer"></div>
+                <h3 id="currentPresenterName"></h3>
+                <button id="actionButton" class="button">Next</button>
+            </div>
+        </div>
 
     </div> <!-- wrapper -->
+    
     <script type="module" src="script.js"></script>
 </body>
 </html>

@@ -99,3 +99,14 @@ html, body {
     background-color: #c8e6c9;
     transition: background-color 0.3s ease;
 }
+
+#roleSelectionView {
+    display: flex;
+    flex-direction: column;
+}
+
+#roleButtons {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
