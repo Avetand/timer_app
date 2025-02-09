@@ -4,19 +4,19 @@ import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https:/
 
 const auth = getAuth();
 
-
 document.addEventListener("DOMContentLoaded", () => {
     const saveButton = document.getElementById("saveButton");
     const startButton = document.getElementById("startButton");
     const actionButton = document.getElementById("actionButton");
+    const actionButtonDiv = document.getElementById("actionButtonDiv");
     const addPresenterForm = document.getElementById("addPresenterForm");
     const title = document.getElementById("title");
-    const menuView = document.getElementById("menuView");
     const tableHeader = document.querySelector("#tableHeader tr");
     const presentersTable = document.querySelector("#presentersTable tbody");
     const timerView = document.getElementById("timerView");
     const timerElement = document.getElementById("timer");
     const currentPresenterName = document.getElementById("currentPresenterName");
+    const durationInput = document.getElementById("presenterDuration");
 
     const presentersCollection = collection(db, "presenters");
     const timerDocRef = doc(db, "timer", "current");
@@ -37,13 +37,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const presenterButton = document.getElementById("presenterButton");
     const loginButton = document.getElementById("loginButton");
     const loginError = document.getElementById("loginError");
-    let isAdmin = false;
+    let isAdmin = localStorage.getItem('isAdmin') === 'true';
 
-    // Check if user is already logged in
     onAuthStateChanged(auth, (user) => {
         if (user) {
             isAdmin = true;
-            showMainView(true); // Show full view for admin
+            localStorage.setItem('isAdmin', 'true');
+            showMainView(isAdmin);
+        } else if (localStorage.getItem('userRole')) {
+            isAdmin = localStorage.getItem('userRole') === 'admin';
+            showMainView(isAdmin);
         } else {
             showRoleSelectionView();
         }
@@ -55,6 +58,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     presenterButton.addEventListener("click", () => {
         isAdmin = false;
+        localStorage.setItem('userRole', 'presenter');
         showMainView(false);
     });
 
@@ -65,16 +69,31 @@ document.addEventListener("DOMContentLoaded", () => {
         signInWithEmailAndPassword(auth, email, password)
             .then((userCredential) => {
                 isAdmin = true;
-                console.log("Logged in as admin:", userCredential.user.email);
-                showMainView(true); // Show full view for admin
+                localStorage.setItem('isAdmin', 'true');
+                localStorage.setItem('userRole', 'admin');
+                showMainView(true);
                 document.getElementById("adminEmail").value = "";
-                document.getElementById("adminPassword").value = ""; // Clear input fields
-                loginError.style.display = "none"; // Hide error message if login is successful
+                document.getElementById("adminPassword").value = "";
+                loginError.style.display = "none";
             })
             .catch((error) => {
                 loginError.style.display = "block";
                 loginError.textContent = "Invalid email or password";
             });
+    });
+
+    const backButton = document.getElementById('backButton');
+    backButton.addEventListener('click', () => {
+        showRoleSelectionView();
+    });
+
+    const logoutButton = document.getElementById('logoutButton');
+    logoutButton.addEventListener('click', () => {
+        localStorage.removeItem('isAdmin');
+        localStorage.removeItem('userRole');
+        auth.signOut().then(() => {
+            window.location.reload();
+        });
     });
 
     function showRoleSelectionView() {
@@ -94,32 +113,19 @@ document.addEventListener("DOMContentLoaded", () => {
         adminLoginView.style.display = "none";
         mainView.style.display = "block";
         console.log(isAdmin);
-
-        if (!isAdmin) {
-            menuView.style.display = "block";
-            addPresenterForm.style.display = "none";
-            startButton.style.display = "none";
-            title.style.display = "none";
-            actionButton.style.display = "none";
-            document.querySelectorAll(".actions-column").forEach(el => el.style.display = "none");
-            document.querySelectorAll(".total-time-column").forEach(el => el.style.display = "table-cell");
-
-            tableHeader.querySelector("th:nth-child(4)").style.display = "none";
-            tableHeader.insertAdjacentHTML("beforeend", '<th>Total time</th>');
-        }
+        updateUI(isAdmin, timerData && timerData.running);
     }
 
-    // Listen for real-time changes in presenters collection
     onSnapshot(presentersCollection, (snapshot) => {
         presenters = snapshot.docs
             .map(doc => ({ id: doc.id, ...doc.data() }))
-            .sort((a, b) => a.timestamp - b.timestamp); // Sort by timestamp
+            .sort((a, b) => a.timestamp - b.timestamp);
 
         loadPresenters();
         updatePresenterTable();
+        updateUI(isAdmin, timerData && timerData.running);
     });
 
-    // Listen for real-time timer updates
     onSnapshot(timerDocRef, (docSnap) => {
         if (docSnap.exists()) {
             timerData = docSnap.data();
@@ -133,19 +139,18 @@ document.addEventListener("DOMContentLoaded", () => {
                 startTime = timerData.startTime;
                 showTimer(presenters[currentPresenterIndex]);
             } else {
-                // Crucial: Clear intervals in ALL tabs when timer is not running
                 clearInterval(timerInterval);
                 clearInterval(stopwatchInterval);
-                timerInterval = null; // Important: set to null so we know if they are running
+                timerInterval = null;
                 stopwatchInterval = null;
-                timerView.style.display = "none"; // Hide timer view when not running
+                timerView.style.display = "none";
             }
         } else {
             setDoc(timerDocRef, { running: false, currentIndex: 0 });
         }
+        updateUI(isAdmin, timerData.running); 
     });
 
-    // Load presenters from localStorage
     function loadPresenters() {
         presentersTable.innerHTML = "";
         presenters.forEach((presenter, index) => {
@@ -165,20 +170,45 @@ document.addEventListener("DOMContentLoaded", () => {
         startButton.style.display = presenters.length > 0 ? "block" : "none";
     }
 
+    durationInput.addEventListener("input", () => {
+        const duration = parseInt(durationInput.value, 10);
+        if (duration > 60) {
+            saveButton.disabled = true;
+            saveButton.style.backgroundColor = "gray";
+        } else {
+            saveButton.disabled = false;
+            saveButton.style.backgroundColor = "";
+        }
+    });
+
+    function updateSaveButtonState() {
+        const name = document.getElementById("presenterName").value;
+        const duration = parseInt(document.getElementById("presenterDuration").value, 10);
+
+        if (!name || !duration || duration > 60) {
+            saveButton.disabled = true;
+            saveButton.style.backgroundColor = "gray";
+        } else {
+            saveButton.disabled = false;
+            saveButton.style.backgroundColor = "#4caf50";
+        }
+    }
+
+    durationInput.addEventListener("input", updateSaveButtonState);
+    document.getElementById("presenterName").addEventListener("input", updateSaveButtonState);
+
     saveButton.addEventListener("click", async () => {
         const name = document.getElementById("presenterName").value;
         const duration = document.getElementById("presenterDuration").value;
-    
-        if (name && duration) {
+
+        if (name && duration && parseInt(duration, 10) <= 60) {
             const presenterData = {
                 name,
                 duration,
-                // Only add timestamp when creating a new presenter
                 ...(editId ? {} : { timestamp: new Date() })
             };
-    
+
             if (editId) {
-                // When editing, don't modify the timestamp field
                 await updateDoc(doc(db, "presenters", editId), {
                     name,
                     duration
@@ -186,15 +216,15 @@ document.addEventListener("DOMContentLoaded", () => {
                 editId = null;
                 saveButton.textContent = "Save";
             } else {
-                // When adding a new presenter, include the timestamp
                 await addDoc(presentersCollection, presenterData);
             }
             clearInputs();
+            saveButton.style.backgroundColor = "gray";
         }
     });
 
     window.editPresenter = function(index) {
-        const presenter = presenters[index]; // Access the presenter directly by index
+        const presenter = presenters[index];
     
         if (!presenter) {
             console.error("Presenter not found at index:", index);
@@ -204,12 +234,13 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("presenterName").value = presenter.name;
         document.getElementById("presenterDuration").value = presenter.duration;
         
-        editId = presenter.id; // Store Firestore document ID
+        editId = presenter.id;
+        saveButton.style.backgroundColor = "#4caf50";
         saveButton.textContent = "Modify";
     };
 
     window.deletePresenter = async function(index) {
-        const presenter = presenters[index]; // Get the presenter by index
+        const presenter = presenters[index];
     
         if (!presenter) {
             console.error("Presenter not found at index:", index);
@@ -217,24 +248,15 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     
         try {
-            await deleteDoc(doc(db, "presenters", presenter.id)); // Use Firestore document ID
+            await deleteDoc(doc(db, "presenters", presenter.id));
         } catch (error) {
             console.error("Error deleting presenter:", error);
         }
     };
 
     startButton.addEventListener("click", async () => {
-        menuView.querySelector("h2").style.display = "none";
-        addPresenterForm.style.display = "none";
-        startButton.style.display = "none";
-
-        document.querySelectorAll(".actions-column").forEach(el => el.style.display = "none");
-        document.querySelectorAll(".total-time-column").forEach(el => el.style.display = "table-cell");
-
-        tableHeader.querySelector("th:nth-child(4)").style.display = "none";
-        tableHeader.insertAdjacentHTML("beforeend", '<th>Total time</th>');
-
         await setDoc(timerDocRef, { running: true, currentIndex: 0, startTime: Date.now() });
+        updateUI(isAdmin, true);
     });
 
     async function showTimer(presenter) {
@@ -246,11 +268,12 @@ document.addEventListener("DOMContentLoaded", () => {
         let elapsedTime = Math.floor((Date.now() - startTime) / 1000);
         totalTime -= elapsedTime;
         let overtime = 0;
+
+        updateUI(isAdmin, true);
         
         timerElement.textContent = formatTime(totalTime);
         highlightCurrentPresenter();
 
-        // Clear any existing intervals before setting new ones.  This is the MOST important change.
         clearInterval(timerInterval);
         clearInterval(stopwatchInterval);
         timerInterval = null;
@@ -266,7 +289,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 timerElement.style.color = "black";
                 timerElement.textContent = formatTime(totalTime);
             }
-            if (totalTime < -3600) { // Stop at -1 hour to prevent overflow
+            if (totalTime < -3600) {
                 clearInterval(timerInterval);
                 clearInterval(stopwatchInterval);
                 timerElement.textContent = "+60:00";
@@ -285,8 +308,8 @@ document.addEventListener("DOMContentLoaded", () => {
         actionButton.onclick = async () => {
             clearInterval(timerInterval);
             clearInterval(stopwatchInterval);
-            timerInterval = null; // Important: set to null
-            stopwatchInterval = null; // Important: set to null
+            timerInterval = null;
+            stopwatchInterval = null;
         
             let elapsedTime = Math.floor((Date.now() - startTime) / 1000);
             const finalTime = formatTime(elapsedTime);
@@ -295,28 +318,50 @@ document.addEventListener("DOMContentLoaded", () => {
         
             if (currentPresenterIndex < presenters.length - 1) {
                 currentPresenterIndex++;
-                await updateDoc(timerDocRef, { currentIndex: currentPresenterIndex, startTime: Date.now() }); // Update for next presenter
+                await updateDoc(timerDocRef, { currentIndex: currentPresenterIndex, startTime: Date.now() });
+                updateUI(isAdmin, true);
             } else {
-                await setDoc(timerDocRef, { running: false, startTime: null }); // Stop timer, reset startTime
-                resetUI();
+                await setDoc(timerDocRef, { running: false, startTime: null });
+                updateUI(isAdmin, false);
+                document.querySelectorAll("#presentersTable tbody tr").forEach(row => {
+                    row.classList.remove("current-presenter");
+                });
             }
         };
     }
 
-    function resetUI() {
-        timerView.style.display = "none";
-        startButton.style.display = "block";
-        menuView.querySelector("h2").style.display = "block";
-        addPresenterForm.style.display = "block";
-        document.querySelectorAll(".actions-column").forEach(el => el.style.display = "table-cell");
-        document.querySelectorAll(".total-time-column").forEach(el => el.style.display = "none");
-        tableHeader.querySelector("th:last-child")?.remove();
-        tableHeader.querySelector("th:nth-child(4)").style.display = "block";
-        currentPresenterIndex = 0;
+    function updateUI(isAdmin, timerRunning) {
+        if (isAdmin && !timerRunning) {
+            title.style.display = "block";
+            addPresenterForm.style.display = "flex";
+            startButton.style.display = presenters.length > 0 ? "block" : "none";
+            actionButtonDiv.style.display = "none";
+            document.getElementById("actionsHeader").innerHTML = "Actions";
 
-        document.querySelectorAll("#presentersTable tbody tr").forEach(row => {
-            row.classList.remove("current-presenter");
-        });
+            document.querySelectorAll(".actions-column").forEach(el => el.style.display = "table-cell");
+            document.querySelectorAll(".total-time-column").forEach(el => el.style.display = "none");
+            tableHeader.querySelector("th:nth-child(4)").style.display = "block";
+        } else if (isAdmin && timerRunning) {
+            title.style.display = "none";
+            addPresenterForm.style.display = "none";
+            startButton.style.display = "none";
+            actionButtonDiv.style.display = "block";
+            document.getElementById("actionsHeader").innerHTML = "Total Time";
+
+            document.querySelectorAll(".actions-column").forEach(el => el.style.display = "none");
+            document.querySelectorAll(".total-time-column").forEach(el => el.style.display = "table-cell");
+        }
+        if (!isAdmin) {
+            title.style.display = "none";
+            addPresenterForm.style.display = "none";
+            startButton.style.display = "none";
+            actionButtonDiv.style.display = "none";
+
+            document.querySelectorAll(".actions-column").forEach(el => el.style.display = "none");
+            document.querySelectorAll(".total-time-column").forEach(el => el.style.display = "table-cell");
+
+            document.getElementById("actionsHeader").innerHTML = "Total Time";
+        }
     }
     
 
@@ -354,7 +399,4 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("presenterName").value = "";
         document.getElementById("presenterDuration").value = "";
     }
-
-    loadPresenters();
-    updatePresenterTable();
 });
