@@ -160,8 +160,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 <td>${presenter.name}</td>
                 <td>${presenter.duration} min</td>
                 <td class="actions-column">
-                    <img src="icons/edit.svg" alt="Edit" class="icon" onclick="editPresenter(${index})">
-                    <img src="icons/delete.svg" alt="Delete" class="icon" onclick="deletePresenter(${index})">
+                    <img src="resources/icons/edit.svg" alt="Edit" class="icon" onclick="editPresenter(${index})">
+                    <img src="resources/icons/delete.svg" alt="Delete" class="icon" onclick="deletePresenter(${index})">
                 </td>
                 <td class="total-time-column" style="display: none;">-</td>
             `;
@@ -398,5 +398,72 @@ document.addEventListener("DOMContentLoaded", () => {
     function clearInputs() {
         document.getElementById("presenterName").value = "";
         document.getElementById("presenterDuration").value = "";
+    }
+
+    const clapsDocRef = doc(db, "claps", "clapCount");
+    const clapSound = new Audio('resources/sounds/claps.mp3');
+    const muteButton = document.getElementById("muteButton");
+
+    // Check saved mute preference from localStorage
+    let isMuted = localStorage.getItem("muted") === "true";
+    clapSound.muted = isMuted;
+    muteButton.src = isMuted ? "resources/icons/unmute.svg" : "resources/icons/mute.svg";
+    
+    // Toggle mute/unmute when button is clicked
+    muteButton.addEventListener("click", () => {
+        isMuted = !isMuted; // Toggle state
+        clapSound.muted = isMuted;
+        
+        // Update icon
+        muteButton.src = isMuted ? "resources/icons/unmute.svg" : "resources/icons/mute.svg";
+        
+        // Save preference
+        localStorage.setItem("muted", isMuted);
+    });
+
+    //clapping
+    document.getElementById('clapButton').addEventListener('click', async function(event) {
+        // createClap(event.clientX, event.clientY);
+        
+        try {
+            await updateDoc(clapsDocRef, {
+                timestamp: new Date().getTime()
+            }).catch(async () => {
+                await setDoc(clapsDocRef, { timestamp: new Date().getTime() });
+            });
+        } catch (error) {
+            console.error("Error updating Firestore:", error);
+        }
+    });
+
+    onSnapshot(clapsDocRef, (docSnap) => {
+        if (docSnap.exists()) {
+            const { timestamp } = docSnap.data();
+            if (timestamp) {
+                createClap(window.innerWidth / 2, window.innerHeight / 2);
+
+                clapSound.currentTime = 0; // Reset sound in case it plays multiple times quickly
+                clapSound.play(); // Play the clap sound
+            }
+        }
+    });
+
+    function createClap(x, y) {
+        const clap = document.createElement('div');
+        clap.classList.add('clap');
+        clap.textContent = '👏';
+        document.body.appendChild(clap);
+        
+        const randomOffsetX = (Math.random() - 0.5) * 100;
+        const randomOffsetY = -(Math.random() * 100 + 50);
+        
+        clap.style.left = `${x + randomOffsetX}px`;
+        clap.style.top = `${y}px`;
+        clap.style.setProperty('--random-x', `${randomOffsetX}px`);
+        clap.style.setProperty('--random-y', `${randomOffsetY}px`);
+        
+        setTimeout(() => {
+            clap.remove();
+        }, 1000);
     }
 });

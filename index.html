@@ -20,7 +20,7 @@
 
         <!-- Admin Login Screen -->
         <div id="adminLoginView" style="display: none;">
-            <img src="icons/arrow-left.svg" alt="back" id="backButton" class="icon">
+            <img src="resources/icons/arrow-left.svg" alt="back" id="backButton" class="icon">
             <h2>Admin Login</h2>
             <div class="form">
                 <input type="email" id="adminEmail" placeholder="Email">
@@ -33,7 +33,11 @@
         <!-- Main View (Hidden Initially) -->
         <div id="mainView" style="display: none;">
             <div id="menuView">
-                <img src="icons/logout.svg" alt="logout" id="logoutButton" class="icon">
+                <div id="menuTopBar">
+                    <img src="resources/icons/logout.svg" alt="logout" id="logoutButton" class="icon">
+                    <button id="clapButton">👏</button>
+                    <img src="resources/icons/mute.svg" alt="mute" id="muteButton" class="icon">
+                </div>
                 <h2 id="title">Add presenters</h2>
                 <div id="addPresenterForm" class="form">
                     <input type="text" id="presenterName" placeholder="Name">

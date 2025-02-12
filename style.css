@@ -21,6 +21,43 @@ html, body {
     padding: 20px;
 }
 
+#menuTopBar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+#clapButton {
+    font-size: 2rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    position: relative;
+    user-select: none;
+}
+
+.clap {
+    position: absolute;
+    font-size: 2rem;
+    animation: floatUp 1s ease-out forwards;
+    user-select: none;
+}
+@keyframes floatUp {
+    0% {
+        transform: translate(0, 0);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(var(--random-x, 0px), var(--random-y, -100px));
+        opacity: 0;
+    }
+}
+
+#muteButton {
+    width: 30px;
+    height: 30px;
+}
+
 .form {
     display: flex;
     flex-direction: row;
