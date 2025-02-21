@@ -144,6 +144,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 timerInterval = null;
                 stopwatchInterval = null;
                 timerView.style.display = "none";
+                mainView.style.marginTop = "0";
             }
         } else {
             setDoc(timerDocRef, { running: false, currentIndex: 0 });
@@ -260,7 +261,8 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     async function showTimer(presenter) {
-        timerView.style.display = "block";
+        timerView.style.display = "flex";
+        mainView.style.marginTop = "400px";
         timerElement.style.color = "black";
         currentPresenterName.textContent = presenter.name;
 

@@ -3,22 +3,28 @@
 html, body {
     width: 100%;
     height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     margin: 0;
     padding: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     font-family: "Montserrat", serif; /* Apply the font to all text */
 }
 
-#wrapper {
+.wrapper {
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
     border-radius: 20px;
     box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
     background-color: #efefef;
     padding: 20px;
+}
+
+#mainView {
+    max-height: 90vh;
+    overflow-y: auto;
 }
 
 #menuTopBar {
@@ -42,6 +48,7 @@ html, body {
     animation: floatUp 1s ease-out forwards;
     user-select: none;
 }
+
 @keyframes floatUp {
     0% {
         transform: translate(0, 0);
@@ -61,11 +68,14 @@ html, body {
 .form {
     display: flex;
     flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
     gap: 10px;
     margin-top: 20px;
 }
 
 .form input {
+    width: 100%;
     padding: 10px;
     font-size: 16px;
 }
@@ -77,15 +87,15 @@ html, body {
 }
 
 .icon {
-    width: 20px;  /* Adjust icon size */
+    width: 20px;
     height: 20px;
     cursor: pointer;
-    margin: 0 5px; /* Add spacing between icons */
+    margin: 0 5px;
     transition: transform 0.2s ease;
 }
 
 .icon:hover {
-    transform: scale(1.2); /* Slight zoom effect on hover */
+    transform: scale(1.2);
 }
 
 .button {
@@ -100,15 +110,44 @@ html, body {
 }
 
 #presentersTable {
-    width: 100%;
-    margin: 20px 0;
-    text-align: center;
-    border-collapse: collapse;
+    table-layout: fixed;
+    overflow-x: auto;
+    display: block;
     border: none;
+    max-width: 100%;
+    font-size: 16px;
 }
 
 #presentersTable th, #presentersTable td {
+    white-space: normal;
+    text-align: center;
+    overflow: hidden;
+    border: none;
     padding: 10px;
+}
+
+#presentersTable th:nth-child(1), 
+#presentersTable td:nth-child(1) {
+    width: 5%;
+    min-width: 30px;
+}
+
+#presentersTable th:nth-child(2), 
+#presentersTable td:nth-child(2) {
+    width: 55%;
+    white-space: normal;
+    word-break: break-word;
+}
+
+#presentersTable th:nth-child(3), 
+#presentersTable td:nth-child(3) {
+    width: 20%;
+}
+
+#presentersTable th:nth-child(4), 
+#presentersTable td:nth-child(4) {
+    width: 80%;
+    text-align: center;
 }
 
 #presentersTable th {
@@ -116,8 +155,14 @@ html, body {
 }
 
 #timerView {
+    position: fixed;
+    top: 0;
+    left: 0;
     width: 100%;
-    margin-top: 20px;
+    background-color: white;
+    padding: 10px 0;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    z-index: 1000; /* Ensure it's above other elements */
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -141,11 +186,6 @@ html, body {
 .current-presenter {
     background-color: #c8e6c9;
     transition: background-color 0.3s ease;
-}
-
-#roleSelectionView {
-    display: flex;
-    flex-direction: column;
 }
 
 #roleButtons {
